@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>성경 인물 MBTI 검사</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;900&family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-deep:#0f3535;
+    --teal:#154545;
+    --sand:#f2e3c8;
+    --sand-dim:#c7b997;
+    --terracotta:#c1613f;
+    --terracotta-bright:#e0805a;
+    --gold:#d4a24c;
+    --gold-bright:#eec06e;
+    --hair: rgba(242,227,200,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(ellipse at 50% -10%, #1c4b4b 0%, var(--teal-deep) 45%, #081f1f 100%);
+    color: var(--sand);
+    font-family:'Noto Sans KR', sans-serif;
+    min-height:100vh;
+    display:flex; justify-content:center;
+    padding: 48px 20px 80px;
+    position:relative;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+  }
+  .stage{ width:100%; max-width:660px; position:relative; z-index:1; }
+
+  .masthead{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid var(--hair); padding-bottom:16px; margin-bottom:28px;
+  }
+  .masthead .brand{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.16em;
+    text-transform:uppercase; color: var(--gold-bright);
+  }
+  .masthead .tag{ font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--sand-dim); }
+
+  h1{
+    font-family:'Noto Serif KR', serif; font-weight:700;
+    font-size:clamp(26px,5vw,36px); line-height:1.35; margin:0 0 10px;
+  }
+  .sub{ font-size:15px; color: var(--sand-dim); line-height:1.7; margin:0 0 30px; max-width:54ch; }
+
+  .intro-card{ border:1px solid var(--hair); background: rgba(242,227,200,0.03); padding:28px 24px; }
+  .type-grid{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
+    margin: 22px 0 26px;
+  }
+  .type-grid div{
+    border:1px solid var(--hair);
+    font-family:'IBM Plex Mono', monospace; font-size:12px; text-align:center;
+    padding:8px 0; color: var(--sand-dim); letter-spacing:0.03em;
+  }
+  button.primary{
+    appearance:none; border:1px solid var(--gold-bright);
+    background: var(--gold); color: var(--teal-deep);
+    font-family:'Noto Sans KR', sans-serif; font-weight:700; font-size:15px;
+    padding:14px 22px; cursor:pointer; width:100%;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  button.primary:hover{ background: var(--gold-bright); }
+  button.primary:active{ transform: translateY(1px); }
+  button.primary:focus-visible{ outline:2px solid var(--sand); outline-offset:3px; }
+  .meta-line{ font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--sand-dim); margin-top:14px; text-align:center; }
+
+  /* quiz */
+  .quiz-wrap{ display:none; }
+  .quiz-wrap.active{ display:block; }
+  .progress-row{ display:flex; align-items:center; gap:14px; margin-bottom:30px; }
+  .progress-count{ font-family:'IBM Plex Mono', monospace; font-size:12px; color: var(--gold-bright); min-width:50px; }
+  .progress-track{ flex:1; display:flex; gap:4px; }
+  .progress-seg{ flex:1; height:3px; background: rgba(242,227,200,0.14); position:relative; }
+  .progress-seg.done{ background: var(--terracotta-bright); }
+  .progress-seg.current{ overflow:hidden; }
+  .progress-seg.current::after{
+    content:""; position:absolute; inset:0; background: var(--gold-bright);
+    animation: pulseSeg 1.4s ease-in-out infinite;
+  }
+  @keyframes pulseSeg{ 0%,100%{opacity:0.35;} 50%{opacity:1;} }
+
+  .axis-eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--terracotta-bright);
+    letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;
+  }
+  .q-text{
+    font-family:'Noto Serif KR', serif; font-weight:600;
+    font-size:clamp(20px,4vw,25px); line-height:1.45; margin:0 0 26px;
+  }
+  .options{ display:flex; flex-direction:column; gap:12px; }
+  .opt{
+    text-align:left; appearance:none;
+    background: rgba(242,227,200,0.03); border:1px solid var(--hair);
+    color: var(--sand); font-family:'Noto Sans KR', sans-serif; font-size:15.5px;
+    line-height:1.5; padding:18px 20px; cursor:pointer;
+    display:flex; align-items:center; gap:14px;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.08s ease;
+  }
+  .opt .opt-mark{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--gold-bright);
+    border:1px solid rgba(212,162,76,0.5); width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .opt:hover{ border-color: var(--terracotta); background: rgba(193,97,63,0.1); }
+  .opt:active{ transform: translateY(1px); }
+  .opt:focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; }
+
+  .back-link{
+    margin-top:22px; background:none; border:none; color: var(--sand-dim);
+    font-family:'IBM Plex Mono', monospace; font-size:12px; cursor:pointer; padding:6px 0;
+  }
+  .back-link:hover{ color: var(--sand); }
+  .back-link:disabled{ opacity:0.25; cursor:default; }
+
+  /* result */
+  .result-wrap{ display:none; }
+  .result-wrap.active{ display:block; animation: riseIn 0.5s ease both; }
+  @keyframes riseIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+
+  .result-eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--terracotta-bright);
+    letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px;
+  }
+
+  .type-badge{
+    display:inline-flex; align-items:baseline; gap:12px;
+    border:1px solid var(--gold-bright);
+    padding:10px 20px; margin-bottom:20px;
+  }
+  .type-badge .letters{
+    font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:26px; color: var(--gold-bright);
+    letter-spacing:0.08em;
+  }
+  .type-badge .axis-mini{ font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--sand-dim); }
+
+  .figure-card{
+    border:1px solid var(--hair);
+    background: linear-gradient(160deg, rgba(193,97,63,0.14), rgba(212,162,76,0.06));
+    padding:30px 26px;
+    margin-bottom:20px;
+    position:relative;
+  }
+  .figure-card::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, var(--terracotta), var(--gold-bright));
+  }
+  .figure-eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--gold-bright);
+    letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;
+  }
+  .figure-name{
+    font-family:'Noto Serif KR', serif; font-weight:900;
+    font-size:clamp(30px,6vw,40px); line-height:1.2; margin:0 0 6px; color: var(--sand);
+  }
+  .figure-epithet{
+    font-family:'Noto Serif KR', serif; font-style:italic; font-weight:500;
+    font-size:17px; color: var(--terracotta-bright); margin: 0 0 18px;
+  }
+  .figure-desc{ font-size:15px; line-height:1.75; color: var(--sand); margin:0 0 16px; }
+  .figure-verse{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color: var(--sand-dim); }
+
+  .panel{
+    border:1px solid var(--hair); background: rgba(242,227,200,0.03);
+    padding:22px 22px 20px; margin-bottom:16px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:0.06em;
+    text-transform:uppercase; color: var(--terracotta-bright); margin:0 0 14px;
+  }
+  .tip-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; }
+  .tip-list li{ display:flex; gap:12px; font-size:14.5px; line-height:1.6; }
+  .tip-list li .n{
+    font-family:'IBM Plex Mono', monospace; color: var(--gold-bright);
+    font-size:12px; flex-shrink:0; padding-top:2px;
+  }
+
+  .axis-bars{ display:flex; flex-direction:column; gap:14px; margin-bottom:6px; }
+  .axis-bar-row{ display:flex; flex-direction:column; gap:6px; }
+  .axis-bar-labels{
+    display:flex; justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--sand-dim);
+  }
+  .axis-bar-labels .active{ color: var(--gold-bright); font-weight:600; }
+  .axis-bar-track{ height:6px; background: rgba(242,227,200,0.1); position:relative; overflow:hidden; }
+  .axis-bar-fill{ position:absolute; top:0; bottom:0; background: linear-gradient(90deg, var(--terracotta), var(--gold-bright)); transition: width 0.8s cubic-bezier(.2,.8,.2,1); }
+
+  .disclaimer{ font-size:12.5px; color: var(--sand-dim); line-height:1.7; margin: 20px 0 22px; opacity:0.85; }
+
+  .restart{
+    appearance:none; background:none; border:1px solid rgba(242,227,200,0.3);
+    color: var(--sand); font-family:'Noto Sans KR', sans-serif; font-size:14px;
+    padding:12px 20px; cursor:pointer; width:100%;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .restart:hover{ border-color: var(--terracotta); background: rgba(193,97,63,0.1); }
+  .restart:focus-visible{ outline:2px solid var(--gold-bright); outline-offset:3px; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="masthead">
+    <div class="brand">성경 인물 MBTI</div>
+    <div class="tag">20문항 · 성격 유형 진단</div>
+  </div>
+
+  <!-- INTRO -->
+  <div id="intro">
+    <h1>나는 성경 속<br>어떤 인물과 닮았을까?</h1>
+    <p class="sub">스무 개의 질문으로 나의 성격 유형(MBTI)을 알아보고, 비슷한 결을 가진 성경 인물을 찾아드립니다.</p>
+
+    <div class="intro-card">
+      <div class="type-grid">
+        <div>ISTJ</div><div>ISFJ</div><div>INFJ</div><div>INTJ</div>
+        <div>ISTP</div><div>ISFP</div><div>INFP</div><div>INTP</div>
+        <div>ESTP</div><div>ESFP</div><div>ENFP</div><div>ENTP</div>
+        <div>ESTJ</div><div>ESFJ</div><div>ENFJ</div><div>ENTJ</div>
+      </div>
+      <button class="primary" id="startBtn">검사 시작하기</button>
+      <div class="meta-line">문항 20개 · 약 4~5분 소요 · 결과는 저장되지 않습니다</div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-wrap" id="quizWrap">
+    <div class="progress-row">
+      <div class="progress-count" id="progressCount">1 / 20</div>
+      <div class="progress-track" id="progressTrack"></div>
+    </div>
+    <div class="axis-eyebrow" id="qEyebrow">QUESTION 01</div>
+    <div class="q-text" id="qText"></div>
+    <div class="options" id="optionsWrap"></div>
+    <button class="back-link" id="backBtn">← 이전 질문</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-wrap" id="resultWrap">
+    <div class="result-eyebrow">검사 결과</div>
+    <div class="type-badge">
+      <span class="letters" id="typeLetters">----</span>
+      <span class="axis-mini" id="typeAxisMini"></span>
+    </div>
+
+    <div class="figure-card">
+      <div class="figure-eyebrow" id="figureEyebrow">MATCHED FIGURE</div>
+      <div class="figure-name" id="figureName"></div>
+      <div class="figure-epithet" id="figureEpithet"></div>
+      <p class="figure-desc" id="figureDesc"></p>
+      <div class="figure-verse" id="figureVerse"></div>
+    </div>
+
+    <div class="panel">
+      <h3>성향 축 분포</h3>
+      <div class="axis-bars" id="axisBars"></div>
+    </div>
+
+    <div class="panel">
+      <h3>이 유형에게 건네는 짧은 생각</h3>
+      <ul class="tip-list" id="tipList"></ul>
+    </div>
+
+    <p class="disclaimer">이 검사는 공식 MBTI® 검사가 아니라, MBTI의 네 가지 선호 축 개념을 활용해 만든 간이 자기이해 도구입니다. 성경 인물과의 연결도 성향의 결을 재미있게 비교해보기 위한 것이며, 인물 전체를 규정하려는 것이 아닙니다. 결과는 참고로만 활용해 주세요.</p>
+
+    <button class="restart" id="restartBtn">처음부터 다시 검사하기</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // Each question: axis, and which option corresponds to which pole
+  const questions = [
+    { axis:"EI", eyebrow:"QUESTION 01 · 에너지의 방향", text:"에너지를 얻는 방법은?",
+      options:[["사람들과 함께 있을 때 힘이 난다","E"],["혼자만의 시간에 오히려 충전이 된다","I"]] },
+    { axis:"EI", eyebrow:"QUESTION 02 · 에너지의 방향", text:"새로운 모임에 가면 나는?",
+      options:[["먼저 다가가서 말을 건다","E"],["상황을 지켜본 후 조금씩 다가간다","I"]] },
+    { axis:"EI", eyebrow:"QUESTION 03 · 에너지의 방향", text:"생각을 정리하는 방식은?",
+      options:[["말을 하면서 생각이 정리된다","E"],["혼자 충분히 생각한 후에 말한다","I"]] },
+    { axis:"EI", eyebrow:"QUESTION 04 · 에너지의 방향", text:"주말을 보내는 방식으로 더 끌리는 것은?",
+      options:[["사람들과 어울리는 활동","E"],["조용히 혼자 쉬는 활동","I"]] },
+    { axis:"EI", eyebrow:"QUESTION 05 · 에너지의 방향", text:"대화할 때 더 편안한 방식은?",
+      options:[["여러 사람과 폭넓은 주제로","E"],["소수와 깊이 있는 대화로","I"]] },
+
+    { axis:"SN", eyebrow:"QUESTION 06 · 정보 인식", text:"정보를 받아들일 때 더 신뢰가 가는 것은?",
+      options:[["구체적인 사실과 경험","S"],["가능성과 의미, 큰 맥락","N"]] },
+    { axis:"SN", eyebrow:"QUESTION 07 · 정보 인식", text:"문제를 풀 때 나의 방식은?",
+      options:[["이미 검증된 방법을 따른다","S"],["새로운 방식을 시도해본다","N"]] },
+    { axis:"SN", eyebrow:"QUESTION 08 · 정보 인식", text:"더 흥미가 가는 이야기는?",
+      options:[["실제로 있었던 사건, 사실적인 이야기","S"],["상상력이 담긴 비유와 은유","N"]] },
+    { axis:"SN", eyebrow:"QUESTION 09 · 정보 인식", text:"계획을 세울 때 나는?",
+      options:[["단계별로 구체적으로 세운다","S"],["큰 방향과 그림 위주로 세운다","N"]] },
+    { axis:"SN", eyebrow:"QUESTION 10 · 정보 인식", text:"더 끌리는 쪽은?",
+      options:[["지금 여기, 현실적인 것","S"],["미래의 가능성과 이상","N"]] },
+
+    { axis:"TF", eyebrow:"QUESTION 11 · 판단 기준", text:"결정을 내릴 때 우선하는 것은?",
+      options:[["논리와 원칙","T"],["사람들의 마음과 관계","F"]] },
+    { axis:"TF", eyebrow:"QUESTION 12 · 판단 기준", text:"갈등 상황에서 나는?",
+      options:[["옳고 그름을 먼저 명확히 따진다","T"],["감정을 먼저 헤아리려 한다","F"]] },
+    { axis:"TF", eyebrow:"QUESTION 13 · 판단 기준", text:"누군가에게 조언을 줄 때 나는?",
+      options:[["객관적인 분석과 해결책을 준다","T"],["공감과 위로를 먼저 건넨다","F"]] },
+    { axis:"TF", eyebrow:"QUESTION 14 · 판단 기준", text:"더 중요하게 여기는 가치는?",
+      options:[["공정함과 정의","T"],["화합과 배려","F"]] },
+    { axis:"TF", eyebrow:"QUESTION 15 · 판단 기준", text:"비판을 받으면 나는?",
+      options:[["먼저 논리적으로 따져본다","T"],["마음이 먼저 상한다","F"]] },
+
+    { axis:"JP", eyebrow:"QUESTION 16 · 생활 양식", text:"일하는 방식으로 더 나에게 맞는 것은?",
+      options:[["계획을 세우고 그대로 진행한다","J"],["상황에 따라 유연하게 바꾼다","P"]] },
+    { axis:"JP", eyebrow:"QUESTION 17 · 생활 양식", text:"마감을 앞두고 나는?",
+      options:[["미리 끝내야 마음이 편하다","J"],["임박해야 오히려 집중력이 오른다","P"]] },
+    { axis:"JP", eyebrow:"QUESTION 18 · 생활 양식", text:"여행을 갈 때 나는?",
+      options:[["일정을 촘촘히 계획한다","J"],["즉흥적으로 다니는 걸 좋아한다","P"]] },
+    { axis:"JP", eyebrow:"QUESTION 19 · 생활 양식", text:"결정을 내리는 속도는?",
+      options:[["빨리 정하고 마무리 짓는 편이다","J"],["여러 가능성을 열어두는 편이다","P"]] },
+    { axis:"JP", eyebrow:"QUESTION 20 · 생활 양식", text:"내 책상이나 방은 보통?",
+      options:[["정돈되어 있어야 마음이 편하다","J"],["조금 어수선해도 크게 신경 안 쓴다","P"]] }
+  ];
+
+  const figures = {
+    ISTJ: { name:"느헤미야", epithet:"묵묵히 성벽을 다시 쌓은 재건자",
+      desc:"느헤미야는 무너진 예루살렘 성벽을 재건하기 위해 철저히 계획하고, 반대와 방해 속에서도 끝까지 임무를 완수했습니다. 원칙에 충실하고 맡은 일을 끝까지 책임지는 성실함이 돋보이는 인물입니다.",
+      verse:"느헤미야 2장, 6장 참조",
+      tips:["세운 계획을 끝까지 지켜내는 힘은 이미 당신의 강점입니다","가끔은 계획 밖의 변수도 여유 있게 받아들여보세요"] },
+    ISFJ: { name:"마르다", epithet:"손님을 위해 부엌을 지킨 섬김이",
+      desc:"마르다는 예수님과 제자들을 대접하기 위해 분주히 움직이며 실질적인 섬김을 감당했습니다. 눈에 띄지 않아도 필요한 일을 묵묵히 챙기는 헌신적인 성향이 특징입니다.",
+      verse:"누가복음 10장 참조",
+      tips:["당신의 섬김은 누군가에게 분명히 닿고 있습니다","가끔은 일을 잠시 내려놓고 함께 머무는 시간도 필요해요"] },
+    INFJ: { name:"요셉", epithet:"꿈과 통찰로 미래를 내다본 자",
+      desc:"요셉은 어릴 적부터 남다른 꿈을 꾸었고, 훗날 그 통찰력으로 애굽의 위기를 미리 대비했습니다. 내면 깊이 의미를 읽어내고 멀리 내다보는 직관이 두드러집니다.",
+      verse:"창세기 37장, 41장 참조",
+      tips:["당신의 깊은 통찰은 시간이 지나 빛을 발할 때가 많습니다","혼자 짊어지지 말고 가끔은 곁의 사람에게 마음을 나눠보세요"] },
+    INTJ: { name:"바울", epithet:"체계적으로 복음을 논증한 전략가",
+      desc:"바울은 신학적 논리를 정교하게 세워 서신을 쓰고, 장기적인 전도 여정을 치밀하게 계획해 나갔습니다. 큰 그림을 그리고 원칙에 따라 밀고 나가는 전략적 사고가 강점입니다.",
+      verse:"로마서, 사도행전 참조",
+      tips:["당신의 체계적인 사고는 큰 변화를 만들어낼 힘이 있습니다","계획에 없던 사람의 사정에도 마음의 여유를 남겨보세요"] },
+    ISTP: { name:"삼손", epithet:"위기의 순간 몸으로 부딪힌 행동가",
+      desc:"삼손은 말보다 행동으로, 위기 앞에서 즉각적인 힘과 결단으로 대응했습니다. 상황에 맞춰 빠르게 움직이는 실전형 기질이 돋보입니다.",
+      verse:"사사기 14~16장 참조",
+      tips:["위기에 강한 순발력은 분명한 강점입니다","힘을 쓰기 전에 잠시 멈추어 방향을 점검하는 습관도 도움이 됩니다"] },
+    ISFP: { name:"요나단", epithet:"조용히 우정을 지킨 온유한 자",
+      desc:"요나단은 왕위 계승자라는 위치에도 불구하고 다윗과의 우정을 조용히, 그러나 끝까지 지켰습니다. 자기주장을 앞세우기보다 관계 속에서 진심을 지키는 온유함이 특징입니다.",
+      verse:"사무엘상 18장, 20장 참조",
+      tips:["조용한 신의는 시간이 지날수록 더 크게 기억됩니다","가끔은 당신의 마음을 먼저 말로 표현해보는 것도 좋아요"] },
+    INFP: { name:"예레미야", epithet:"눈물로 진심을 전한 이상주의자",
+      desc:"예레미야는 백성이 외면하는 메시지를 끝까지 전하며 깊이 슬퍼하고 아파했습니다. 이상과 가치를 향한 순수한 열망, 그리고 깊은 내면의 감수성이 두드러집니다.",
+      verse:"예레미야서 전반 참조",
+      tips:["당신의 진심은 결과와 상관없이 이미 의미가 있습니다","마음이 지칠 땐 잠시 쉬어가도 괜찮습니다"] },
+    INTP: { name:"니고데모", epithet:"밤에 찾아와 질문을 던진 사색가",
+      desc:"니고데모는 남들의 시선보다 진리에 대한 궁금증을 따라 밤에 조용히 예수님을 찾아가 질문했습니다. 겉모습보다 본질을 탐구하려는 사색적 기질이 특징입니다.",
+      verse:"요한복음 3장 참조",
+      tips:["질문하는 태도는 더 깊은 이해로 가는 좋은 출발점입니다","머릿속 생각을 가끔은 말이나 글로 꺼내보는 것도 좋아요"] },
+    ESTP: { name:"베드로", epithet:"물 위로 먼저 뛰어내린 행동파",
+      desc:"베드로는 예수님을 보자마자 배에서 뛰어내렸고, 위기의 순간에도 가장 먼저 반응했습니다. 생각보다 몸이 먼저 움직이는 즉각적인 실행력이 강점입니다.",
+      verse:"마태복음 14장 참조",
+      tips:["망설임 없는 실행력은 큰 자산입니다","가끔은 뛰어들기 전에 한 박자 멈춰보는 것도 도움이 됩니다"] },
+    ESFP: { name:"다윗", epithet:"온몸으로 기뻐하며 춤춘 자",
+      desc:"젊은 다윗은 언약궤가 돌아올 때 체면을 개의치 않고 온 힘을 다해 기뻐하며 춤췄습니다. 감정을 솔직하게 표현하고 순간을 마음껏 누리는 생동감이 돋보입니다.",
+      verse:"사무엘하 6장 참조",
+      tips:["당신의 밝은 에너지는 주변을 살아나게 합니다","즉흥적인 기쁨만큼 꾸준함도 함께 키워가 보세요"] },
+    ENFP: { name:"바나바", epithet:"사람을 믿고 격려한 위로의 아들",
+      desc:"바나바는 다른 이들이 의심할 때도 바울을 믿어주고 이끌어주었으며, 그 이름처럼 '위로의 아들'로 불렸습니다. 사람의 가능성을 알아보고 열정적으로 응원하는 성향이 특징입니다.",
+      verse:"사도행전 4장, 9장 참조",
+      tips:["사람을 믿어주는 마음은 누군가의 인생을 바꿀 수 있습니다","여러 관심사 중 몇 가지는 끝까지 붙잡아보는 연습도 좋아요"] },
+    ENTP: { name:"아볼로", epithet:"말씀을 논리적으로 풀어낸 웅변가",
+      desc:"아볼로는 성경에 능통하고 열정적으로, 논리 정연하게 말씀을 가르쳤습니다. 아이디어를 빠르게 연결하고 설득력 있게 풀어내는 재기발랄함이 돋보입니다.",
+      verse:"사도행전 18장 참조",
+      tips:["빠른 사고와 논리는 사람들을 설득하는 힘이 됩니다","때로는 다른 사람의 속도에 맞춰 기다려주는 것도 필요해요"] },
+    ESTJ: { name:"여호수아", epithet:"질서 있게 백성을 이끈 지휘자",
+      desc:"여호수아는 모세의 뒤를 이어 체계적으로 군대를 조직하고 가나안 정복을 단계적으로 수행했습니다. 명확한 목표를 정하고 조직을 이끌어가는 추진력이 강점입니다.",
+      verse:"여호수아 1장, 6장 참조",
+      tips:["명확한 리더십은 사람들에게 방향과 안정감을 줍니다","가끔은 계획보다 사람의 속도를 먼저 살펴봐 주세요"] },
+    ESFJ: { name:"룻", epithet:"곁을 지키며 공동체를 품은 자",
+      desc:"룻은 시어머니 나오미를 끝까지 떠나지 않고 함께하며, 낯선 땅에서도 공동체 안에 성실히 자리 잡았습니다. 관계를 소중히 여기고 곁을 지키는 헌신이 두드러집니다.",
+      verse:"룻기 1~2장 참조",
+      tips:["곁을 지키는 신의는 관계를 오래 지속시키는 힘입니다","다른 사람을 챙기는 만큼 자신도 잘 챙겨주세요"] },
+    ENFJ: { name:"모세", epithet:"백성을 품고 이끈 지도자",
+      desc:"모세는 자신 없어 하면서도 결국 백성 앞에 서서 그들을 이끌고, 끊임없이 그들을 위해 중보했습니다. 사람들을 향한 책임감과 이끄는 힘이 특징입니다.",
+      verse:"출애굽기 3장, 14장 참조",
+      tips:["사람을 이끄는 마음은 이미 큰 영향력을 만들어냅니다","가끔은 당신도 누군가에게 기대어 쉬어도 괜찮습니다"] },
+    ENTJ: { name:"드보라", epithet:"결단으로 전세를 이끈 판관",
+      desc:"드보라는 이스라엘의 사사로서 명확한 판단과 결단으로 전쟁을 지휘하고 백성을 이끌었습니다. 목표를 향해 단호하게 밀고 나가는 결단력과 리더십이 두드러집니다.",
+      verse:"사사기 4~5장 참조",
+      tips:["단호한 결단력은 흔들리는 상황에 중심을 잡아줍니다","때로는 속도를 늦추고 주변의 목소리도 들어보세요"] }
+  };
+
+  let current = 0;
+  let answers = [];
+
+  const introEl = document.getElementById('intro');
+  const quizWrap = document.getElementById('quizWrap');
+  const resultWrap = document.getElementById('resultWrap');
+  const startBtn = document.getElementById('startBtn');
+  const backBtn = document.getElementById('backBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const progressCount = document.getElementById('progressCount');
+  const progressTrack = document.getElementById('progressTrack');
+  const qEyebrow = document.getElementById('qEyebrow');
+  const qText = document.getElementById('qText');
+  const optionsWrap = document.getElementById('optionsWrap');
+
+  function buildProgress(){
+    progressTrack.innerHTML = '';
+    for(let i=0;i<questions.length;i++){
+      const seg = document.createElement('div');
+      seg.className = 'progress-seg';
+      if(i < current) seg.classList.add('done');
+      else if(i === current) seg.classList.add('current');
+      progressTrack.appendChild(seg);
+    }
+    progressCount.textContent = (current+1) + ' / ' + questions.length;
+  }
+
+  function renderQuestion(){
+    buildProgress();
+    const q = questions[current];
+    qEyebrow.textContent = q.eyebrow;
+    qText.textContent = q.text;
+    optionsWrap.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt';
+      btn.innerHTML = '<span class="opt-mark">' + String.fromCharCode(65+idx) + '</span><span>' + opt[0] + '</span>';
+      btn.addEventListener('click', () => selectAnswer(opt[1]));
+      optionsWrap.appendChild(btn);
+    });
+    backBtn.disabled = current === 0;
+  }
+
+  function selectAnswer(pole){
+    answers[current] = pole;
+    if(current < questions.length - 1){
+      current++;
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  backBtn.addEventListener('click', () => {
+    if(current > 0){ current--; renderQuestion(); }
+  });
+
+  startBtn.addEventListener('click', () => {
+    introEl.style.display = 'none';
+    quizWrap.classList.add('active');
+    current = 0; answers = [];
+    renderQuestion();
+  });
+
+  function computeType(){
+    const counts = { E:0,I:0,S:0,N:0,T:0,F:0,J:0,P:0 };
+    answers.forEach(p => { counts[p]++; });
+    const type =
+      (counts.E >= counts.I ? 'E' : 'I') +
+      (counts.S >= counts.N ? 'S' : 'N') +
+      (counts.T >= counts.F ? 'T' : 'F') +
+      (counts.J >= counts.P ? 'J' : 'P');
+    return { type, counts };
+  }
+
+  function showResult(){
+    const { type, counts } = computeType();
+    const fig = figures[type];
+
+    quizWrap.classList.remove('active');
+    resultWrap.classList.add('active');
+
+    document.getElementById('typeLetters').textContent = type;
+    document.getElementById('typeAxisMini').textContent =
+      'E' + counts.E + '/I' + counts.I + '  ·  S' + counts.S + '/N' + counts.N + '  ·  T' + counts.T + '/F' + counts.F + '  ·  J' + counts.J + '/P' + counts.P;
+
+    document.getElementById('figureName').textContent = fig.name;
+    document.getElementById('figureEpithet').textContent = '“' + fig.epithet + '”';
+    document.getElementById('figureDesc').textContent = fig.desc;
+    document.getElementById('figureVerse').textContent = fig.verse;
+
+    const tipList = document.getElementById('tipList');
+    tipList.innerHTML = '';
+    fig.tips.forEach((tip,i) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="n">' + String(i+1).padStart(2,'0') + '</span><span>' + tip + '</span>';
+      tipList.appendChild(li);
+    });
+
+    const axisDefs = [
+      { key:'EI', left:'E', right:'I', leftLabel:'외향 E', rightLabel:'내향 I' },
+      { key:'SN', left:'S', right:'N', leftLabel:'감각 S', rightLabel:'직관 N' },
+      { key:'TF', left:'T', right:'F', leftLabel:'사고 T', rightLabel:'감정 F' },
+      { key:'JP', left:'J', right:'P', leftLabel:'판단 J', rightLabel:'인식 P' }
+    ];
+    const axisBars = document.getElementById('axisBars');
+    axisBars.innerHTML = '';
+    axisDefs.forEach(def => {
+      const l = counts[def.left], r = counts[def.right];
+      const total = l + r;
+      const pct = total ? Math.round((l/total)*100) : 50;
+      const row = document.createElement('div');
+      row.className = 'axis-bar-row';
+      const winner = l >= r ? def.left : def.right;
+      row.innerHTML =
+        '<div class="axis-bar-labels">' +
+          '<span class="' + (winner===def.left?'active':'') + '">' + def.leftLabel + ' (' + l + ')</span>' +
+          '<span class="' + (winner===def.right?'active':'') + '">' + def.rightLabel + ' (' + r + ')</span>' +
+        '</div>' +
+        '<div class="axis-bar-track"><div class="axis-bar-fill" style="width:0%"></div></div>';
+      axisBars.appendChild(row);
+      const fill = row.querySelector('.axis-bar-fill');
+      requestAnimationFrame(() => { fill.style.width = pct + '%'; });
+    });
+  }
+
+  restartBtn.addEventListener('click', () => {
+    resultWrap.classList.remove('active');
+    introEl.style.display = 'block';
+    current = 0; answers = [];
+  });
+
+})();
+</script>
+
+</body>
+</html>
